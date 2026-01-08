@@ -23,8 +23,9 @@ router.get('/my', authenticateToken, getUserSubmissions);
 router.get('/', getAllSubmissions);
 
 // DELETE /api/submissions/:id - Remove submission
-// TODO: Protect with authentication middleware, verify ownership
-router.delete('/:id', removeSubmission);
+// Requires: Authorization header with Bearer token
+// Only the submission owner can delete it
+router.delete('/:id', authenticateToken, removeSubmission);
 
 // PUT /api/submissions/:id - Edit submission
 // TODO: Protect with authentication middleware, verify ownership

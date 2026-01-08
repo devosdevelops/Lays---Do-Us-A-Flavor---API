@@ -86,14 +86,36 @@ export async function getAllSubmissions(req, res) {
   }
 }
 
-// TODO: Implement submission deletion
+/**
+ * Remove a submission
+ * DELETE /api/submissions/:id
+ * Requires: Authorization header with Bearer token
+ * Only the submission owner can delete it
+ */
 export async function removeSubmission(req, res) {
   try {
-    // TODO: Verify user owns the submission
-    // TODO: Delete submission by ID
-    res.status(200).json({ message: 'Submission removal not yet implemented' });
+    const { id } = req.params;
+    const userId = req.user.userId; // From auth middleware
+
+    // Find the submission
+    const submission = await Submission.findById(id);
+
+    if (!submission) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    // Verify user owns the submission
+    if (submission.userId.toString() !== userId) {
+      return res.status(403).json({ error: 'You can only delete your own submissions' });
+    }
+
+    // Delete the submission
+    await Submission.findByIdAndDelete(id);
+
+    return res.status(200).json({ message: 'Submission deleted successfully', _id: id });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to remove submission' });
+    console.error('Remove submission error:', error);
+    return res.status(500).json({ error: 'Failed to remove submission' });
   }
 }
 
