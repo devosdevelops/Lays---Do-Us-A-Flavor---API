@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { User } from '../models/Placeholder.js';
 import { validateRegisterInput } from '../utils/validation.js';
 
@@ -58,23 +59,88 @@ export async function createUser(req, res) {
  */
 export async function loginUser(req, res) {
   try {
-    // TODO: Implement login with JWT token
-    res.status(200).json({ message: 'Login not yet implemented' });
+    const { username, password } = req.body;
+
+    // Validate input
+    if (!username || !password) {
+      return res.status(400).json({
+        error: 'Username and password are required',
+      });
+    }
+
+    // Find user by username
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res.status(401).json({
+        error: 'Invalid credentials',
+      });
+    }
+
+    // Compare password with hash
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({
+        error: 'Invalid credentials',
+      });
+    }
+
+    // Check if user is banned
+    if (user.isBanned) {
+      return res.status(403).json({
+        error: 'User account has been banned',
+      });
+    }
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { userId: user._id, username: user.username },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // Return token and user info
+    return res.status(200).json({
+      token,
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        createdAt: user.createdAt,
+      },
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to login' });
+    console.error('Login error:', error);
+    return res.status(500).json({ error: 'Failed to login' });
   }
 }
 
 /**
  * Get authenticated user's profile
  * GET /api/users/profile
+ * Requires: Authorization header with Bearer token
  */
 export async function getUserProfile(req, res) {
   try {
-    // TODO: Get user ID from JWT token in headers
-    // TODO: Return user profile without password
-    res.status(200).json({ message: 'Get user profile not yet implemented' });
+    // User is attached by auth middleware
+    const user = await User.findById(req.user.userId);
+
+    if (!user) {
+      return res.status(404).json({
+        error: 'User not found',
+      });
+    }
+
+    return res.status(200).json({
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      createdAt: user.createdAt,
+      isBanned: user.isBanned,
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get user profile' });
+    console.error('Get profile error:', error);
+    return res.status(500).json({ error: 'Failed to get user profile' });
   }
 }

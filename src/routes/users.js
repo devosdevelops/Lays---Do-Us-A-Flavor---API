@@ -4,10 +4,10 @@ import {
   loginUser,
   getUserProfile,
 } from '../controllers/userController.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
 
-// TODO: Add authentication middleware
 // POST /api/users/register - Create new user account
 router.post('/register', createUser);
 
@@ -15,7 +15,7 @@ router.post('/register', createUser);
 router.post('/login', loginUser);
 
 // GET /api/users/profile - Get authenticated user's profile
-// TODO: Protect with authentication middleware
-router.get('/profile', getUserProfile);
+// Requires: Authorization: Bearer <token>
+router.get('/profile', authenticateToken, getUserProfile);
 
 export default router;
