@@ -7,14 +7,13 @@ import {
   editSubmission,
   exportScreenshot,
 } from '../controllers/submissionController.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
 
-// TODO: Add authentication middleware for protected routes
-
 // POST /api/submissions - Create new submission
-// TODO: Protect with authentication middleware
-router.post('/', createSubmission);
+// Requires: Authorization header with Bearer token
+router.post('/', authenticateToken, createSubmission);
 
 // GET /api/submissions/my - Get authenticated user's submissions
 // TODO: Protect with authentication middleware

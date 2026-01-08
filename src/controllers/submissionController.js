@@ -1,14 +1,46 @@
 import { Submission } from '../models/Submission.js';
+import { validateSubmissionInput } from '../utils/validation.js';
 
-// TODO: Implement submission creation with image upload
+/**
+ * Create a new submission
+ * POST /api/submissions
+ * Requires: Authorization header with Bearer token
+ */
 export async function createSubmission(req, res) {
   try {
-    // TODO: Validate input (flavorName, bagColor, fontChoice, keyFlavors)
-    // TODO: Handle image upload to Cloudinary or similar
-    // TODO: Link submission to authenticated user
-    res.status(201).json({ message: 'Submission creation not yet implemented' });
+    const { flavorName, bagColor, fontChoice, keyFlavors } = req.body;
+    const userId = req.user.userId; // From auth middleware
+
+    // Validate input
+    const validation = validateSubmissionInput(flavorName, bagColor, fontChoice, keyFlavors);
+    if (!validation.isValid) {
+      return res.status(400).json({ errors: validation.errors });
+    }
+
+    // Create submission
+    const newSubmission = await Submission.create({
+      userId,
+      flavorName: flavorName.trim(),
+      bagColor: bagColor.trim(),
+      fontChoice: fontChoice ? fontChoice.trim() : undefined,
+      keyFlavors: keyFlavors && Array.isArray(keyFlavors) ? keyFlavors.map(f => f.trim()) : [],
+    });
+
+    // Return created submission
+    return res.status(201).json({
+      _id: newSubmission._id,
+      userId: newSubmission.userId,
+      flavorName: newSubmission.flavorName,
+      bagColor: newSubmission.bagColor,
+      fontChoice: newSubmission.fontChoice,
+      keyFlavors: newSubmission.keyFlavors,
+      voteCount: newSubmission.voteCount,
+      createdAt: newSubmission.createdAt,
+      updatedAt: newSubmission.updatedAt,
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to create submission' });
+    console.error('Create submission error:', error);
+    return res.status(500).json({ error: 'Failed to create submission' });
   }
 }
 
