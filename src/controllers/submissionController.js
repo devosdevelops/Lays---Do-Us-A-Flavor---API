@@ -44,14 +44,25 @@ export async function createSubmission(req, res) {
   }
 }
 
-// TODO: Implement getting user's submissions
+/**
+ * Get authenticated user's submissions
+ * GET /api/submissions/my
+ * Requires: Authorization header with Bearer token
+ */
 export async function getUserSubmissions(req, res) {
   try {
-    // TODO: Get user ID from JWT token
-    // TODO: Fetch all submissions by user
-    res.status(200).json({ message: 'Get user submissions not yet implemented' });
+    const userId = req.user.userId; // From auth middleware
+
+    // Fetch all submissions by this user, sorted by creation date (newest first)
+    const userSubmissions = await Submission.find({ userId })
+      .select('_id userId flavorName bagColor fontChoice keyFlavors voteCount createdAt updatedAt')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json(userSubmissions);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get submissions' });
+    console.error('Get user submissions error:', error);
+    return res.status(500).json({ error: 'Failed to get submissions' });
   }
 }
 

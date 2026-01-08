@@ -16,8 +16,8 @@ const router = Router();
 router.post('/', authenticateToken, createSubmission);
 
 // GET /api/submissions/my - Get authenticated user's submissions
-// TODO: Protect with authentication middleware
-router.get('/my', getUserSubmissions);
+// Requires: Authorization header with Bearer token
+router.get('/my', authenticateToken, getUserSubmissions);
 
 // GET /api/submissions - Get all submissions (paginated)
 router.get('/', getAllSubmissions);
