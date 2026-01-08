@@ -5,7 +5,7 @@ import {
   getAllVotes,
   removeVote,
 } from '../controllers/voteController.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, authorizeAdmin } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -17,8 +17,8 @@ router.post('/', authenticateToken, submitVote);
 router.get('/:submissionId', getVoteCounts);
 
 // GET /api/votes - Get all votes (admin only)
-// TODO: Protect with admin authentication middleware
-router.get('/', getAllVotes);
+// Requires: Admin authorization
+router.get('/', authenticateToken, authorizeAdmin, getAllVotes);
 
 // DELETE /api/votes/:id - Remove vote
 // TODO: Protect with authentication middleware, verify ownership

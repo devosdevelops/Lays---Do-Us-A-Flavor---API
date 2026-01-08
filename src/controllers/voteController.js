@@ -85,14 +85,25 @@ export async function getVoteCounts(req, res) {
   }
 }
 
-// TODO: Implement getting all votes (for admin)
+/**
+ * Get all votes (admin only)
+ * GET /api/votes
+ * Requires: Admin authorization
+ */
 export async function getAllVotes(req, res) {
   try {
-    // TODO: Verify user is admin
-    // TODO: Fetch all votes with pagination
-    res.status(200).json({ message: 'Get all votes not yet implemented' });
+    // Fetch all votes sorted by creation date (newest first)
+    // Populate userId and submissionId for complete info
+    const votes = await Vote.find()
+      .populate('userId', 'username email')
+      .populate('submissionId', 'flavorName bagColor')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json(votes);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get votes' });
+    console.error('Get all votes error:', error);
+    return res.status(500).json({ error: 'Failed to get votes' });
   }
 }
 

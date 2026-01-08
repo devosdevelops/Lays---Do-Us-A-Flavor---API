@@ -36,11 +36,20 @@ export function authenticateToken(req, res, next) {
 /**
  * Admin authorization middleware
  * Should be used after authenticateToken
- * TODO: Add admin role to User model
+ * Verifies user has admin role
  */
 export function authorizeAdmin(req, res, next) {
-  // TODO: Check if req.user has admin role
-  // TODO: If not admin, return 403 Forbidden
-  // TODO: If admin, call next()
-  next();
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    if (!req.user.isAdmin) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    next();
+  } catch (error) {
+    return res.status(500).json({ error: 'Authorization error' });
+  }
 }
