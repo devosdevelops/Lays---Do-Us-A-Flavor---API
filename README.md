@@ -1,168 +1,106 @@
-# Lays "Do Us A Flavor" API
+# Lay's "Do Us A Flavor" API
 
-A Node.js Express API for the Lay's "Do Us A Flavor" campaign. Users can design their own flavor and bag design, submit them, and vote on other submissions. Admins can manage users, submissions, and votes.
+Backend API for the Lay's flavor design contest. Users submit custom flavor and bag designs, vote on submissions, and admins manage the platform.
 
 ## Project Structure
 
 ```
 src/
-├── app.js                 # Express app configuration
-├── server.js              # Server entry point
+├── app.js
+├── server.js
 ├── config/
-│   └── db.js              # MongoDB connection
-├── controllers/           # Business logic
+│   └── db.js
+├── controllers/
 │   ├── userController.js
 │   ├── submissionController.js
 │   ├── voteController.js
 │   └── adminController.js
-├── middleware/            # Express middleware
-│   ├── errorHandler.js
-│   └── auth.js
-├── models/                # Mongoose schemas
-│   ├── Placeholder.js     # User model
+├── middleware/
+│   ├── auth.js
+│   └── errorHandler.js
+├── models/
+│   ├── Placeholder.js       # User model
 │   ├── Submission.js
 │   └── Vote.js
-├── routes/                # API endpoints
+├── routes/
 │   ├── index.js
 │   ├── users.js
 │   ├── submissions.js
 │   ├── votes.js
 │   └── admin.js
 └── utils/
-    └── logger.js          # Logging utilities
+    └── logger.js
 ```
 
-## Features (Planned)
+## Stack
 
-### User Accounts
-- [x] Create account endpoint (placeholder)
-- [ ] Authentication & JWT tokens
-- [ ] User profile management
+- Node.js with ES modules
+- Express.js
+- MongoDB Atlas
+- JWT authentication
+- bcrypt password hashing
 
-### Submissions
-- [x] Create submission endpoint (placeholder)
-- [x] Get user submissions endpoint (placeholder)
-- [x] Remove submission endpoint (placeholder)
-- [ ] Image upload integration (Cloudinary)
-- [ ] Edit submissions (nice-to-have)
-- [ ] Screenshot export (nice-to-have)
+## Setup
 
-### Voting
-- [x] Submit vote endpoint (placeholder)
-- [x] Get vote counts endpoint (placeholder)
-- [ ] Vote validation (prevent duplicates)
-- [ ] Remove vote (nice-to-have)
-
-### Admin Dashboard
-- [x] View all users endpoint (placeholder)
-- [x] Ban user endpoint (placeholder)
-- [x] View all submissions endpoint (placeholder)
-- [x] Remove submission endpoint (placeholder)
-- [x] View all votes endpoint (placeholder)
-
-## Getting Started
-
-### Prerequisites
-- Node.js (v16+)
-- MongoDB (local or Atlas)
-- npm or yarn
-
-### Installation
-
-1. Clone the repository
-```bash
-git clone https://github.com/devosdevelops/Lays---Do-Us-A-Flavor---API.git
-cd Lays---Do-Us-A-Flavor---API
-```
-
-2. Install dependencies
+1. Install dependencies
 ```bash
 npm install
 ```
 
-3. Set up environment variables
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your configuration:
+2. Configure environment variables in `.env`:
 ```env
 PORT=3000
-MONGODB_URI=mongodb://localhost:27017/lays-do-us-a-flavor
-JWT_SECRET=your_secret_key_here
+MONGODB_URI=mongodb+srv://...
+JWT_SECRET=your_secret_key
 ```
 
-4. Start the server
+3. Start the server
 ```bash
 npm start
 ```
 
-The server will run on `http://localhost:3000`
+Server runs on `http://localhost:3000`
 
-## API Endpoints
+## API Routes
 
-### Health Check
-- `GET /api/health` - Server health status
-
-### Users
-- `POST /api/users/register` - Create new account
-- `POST /api/users/login` - User login
-- `GET /api/users/profile` - Get user profile
+### Authentication
+- `POST /api/users/register` - Create account
+- `POST /api/users/login` - Login
+- `GET /api/users/profile` - Get profile (protected)
 
 ### Submissions
-- `POST /api/submissions` - Create submission
-- `GET /api/submissions/my` - Get user's submissions
-- `GET /api/submissions` - Get all submissions
-- `DELETE /api/submissions/:id` - Remove submission
-- `PUT /api/submissions/:id` - Edit submission (WIP)
-- `GET /api/submissions/:id/export` - Export screenshot (WIP)
+- `POST /api/submissions` - Create submission (protected)
+- `GET /api/submissions` - List all submissions
+- `GET /api/submissions/my` - Get user's submissions (protected)
+- `DELETE /api/submissions/:id` - Delete submission (protected, ownership required)
 
-### Votes
-- `POST /api/votes` - Submit vote
+### Voting
+- `POST /api/votes` - Vote on submission (protected, no duplicates)
 - `GET /api/votes/:submissionId` - Get vote count for submission
-- `GET /api/votes` - Get all votes (admin)
+- `GET /api/votes` - Get all votes (admin only)
 
 ### Admin
-- `GET /api/admin/users` - View all users
-- `POST /api/admin/users/:userId/ban` - Ban user
-- `GET /api/admin/submissions` - View all submissions
-- `DELETE /api/admin/submissions/:submissionId` - Remove submission
-- `GET /api/admin/votes` - View all votes
+- `GET /api/admin/users` - List all users (admin only)
+- `POST /api/admin/users/:userId/ban` - Ban user (admin only)
+- `GET /api/admin/submissions` - List all submissions (admin only)
+- `DELETE /api/admin/submissions/:id` - Delete submission (admin only)
 
-## Development Notes
+## Authentication
 
-All endpoints are currently **placeholders** with TODO comments indicating where business logic should be implemented.
+Protected routes require a Bearer token in the Authorization header:
+```
+Authorization: Bearer <token>
+```
 
-### Next Steps
-1. Implement user authentication with JWT
-2. Add input validation
-3. Implement database operations (CRUD)
-4. Add password hashing with bcrypt
-5. Implement image upload integration
-6. Add comprehensive error handling
-7. Set up logging system
-8. Add unit and integration tests
+Admin routes additionally check the `isAdmin` flag in the token.
 
-### Architecture Decisions
-- **ES Modules**: Using modern import/export syntax
-- **Modular Structure**: One responsibility per file
-- **Environment Variables**: All config via `.env`
-- **Placeholder Implementations**: TODO comments guide future development
+## Database
 
-## Learning Resources
+Uses MongoDB Atlas with Mongoose schemas for Users, Submissions, and Votes. User passwords are hashed with bcrypt before storage. JWT tokens expire after 7 days.
 
-- [Express.js Documentation](https://expressjs.com/)
-- [Mongoose Documentation](https://mongoosejs.com/)
-- [JWT Authentication](https://jwt.io/)
-- [REST API Design Best Practices](https://restfulapi.net/)
+## Deployment
 
-## License
-
-This is a school project for the Lay's "Do Us A Flavor" campaign.
-
-## Related Projects
-
-- **Frontend**: Three.js flavor configurator
-- **Admin Dashboard**: Vue-based admin panel
-## Usage
-Clone the repo, install dependencies, and start building your API logic in the provided structure.# Lays---Do-Us-A-Flavor---API
+For Render deployment, set these environment variables:
+- `PORT`
+- `MONGODB_URI`
+- `JWT_SECRET`
