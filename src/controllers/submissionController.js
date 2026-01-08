@@ -55,13 +55,23 @@ export async function getUserSubmissions(req, res) {
   }
 }
 
-// TODO: Implement getting all submissions
+/**
+ * Get all submissions
+ * GET /api/submissions
+ * Public endpoint - no authentication required
+ */
 export async function getAllSubmissions(req, res) {
   try {
-    // TODO: Fetch all submissions with pagination
-    res.status(200).json({ message: 'Get all submissions not yet implemented' });
+    // Fetch all submissions sorted by creation date (newest first)
+    const submissions = await Submission.find()
+      .select('_id userId flavorName bagColor fontChoice keyFlavors voteCount createdAt updatedAt')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json(submissions);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get submissions' });
+    console.error('Get all submissions error:', error);
+    return res.status(500).json({ error: 'Failed to get submissions' });
   }
 }
 
