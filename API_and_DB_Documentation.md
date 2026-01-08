@@ -144,12 +144,12 @@ Create a new user account.
 
 #### `POST /api/users/login`
 
-Login with username and password to get JWT token.
+Login with email and password to get JWT token.
 
 **Request Body:**
 ```json
 {
-  "username": "string",
+  "email": "string",
   "password": "string"
 }
 ```
@@ -168,7 +168,7 @@ Login with username and password to get JWT token.
 ```
 
 **Error Responses:**
-- `400` - Missing username or password
+- `400` - Missing email or password
 - `401` - Invalid credentials or user account has been banned
 
 ---
@@ -616,7 +616,7 @@ All errors follow a consistent format:
 For testing purposes, an admin account is available:
 - **Username:** `admin`
 - **Email:** `admin@admin.com`
-- **Password:** `Admin123`
+- **Password:** `Admin`
 
 This account has `isAdmin: true` and can access all admin endpoints.
 
@@ -642,7 +642,7 @@ curl -X POST https://lays-do-us-a-flavor-api.onrender.com/api/users/register \
 curl -X POST https://lays-do-us-a-flavor-api.onrender.com/api/users/login \
   -H "Content-Type: application/json" \
   -d '{
-    "username": "flavordesigner",
+    "email": "designer@example.com",
     "password": "MyPassword123"
   }'
 ```

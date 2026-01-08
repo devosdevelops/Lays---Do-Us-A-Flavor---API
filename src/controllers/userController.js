@@ -59,17 +59,17 @@ export async function createUser(req, res) {
  */
 export async function loginUser(req, res) {
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
     // Validate input
-    if (!username || !password) {
+    if (!email || !password) {
       return res.status(400).json({
-        error: 'Username and password are required',
+        error: 'Email and password are required',
       });
     }
 
-    // Find user by username
-    const user = await User.findOne({ username });
+    // Find user by email
+    const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(401).json({
