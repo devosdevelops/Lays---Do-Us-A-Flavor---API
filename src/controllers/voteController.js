@@ -53,14 +53,35 @@ export async function submitVote(req, res) {
   }
 }
 
-// TODO: Implement getting vote counts
+/**
+ * Get vote count for a submission
+ * GET /api/votes/:submissionId
+ * Public endpoint - no authentication required
+ */
 export async function getVoteCounts(req, res) {
   try {
-    // TODO: Get submission ID from params
-    // TODO: Return vote count for submission
-    res.status(200).json({ message: 'Get vote counts not yet implemented' });
+    const { submissionId } = req.params;
+
+    if (!submissionId) {
+      return res.status(400).json({ error: 'Submission ID is required' });
+    }
+
+    // Check if submission exists
+    const submission = await Submission.findById(submissionId);
+    if (!submission) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    // Get vote count from submission document
+    return res.status(200).json({
+      submissionId: submission._id,
+      voteCount: submission.voteCount,
+      createdAt: submission.createdAt,
+      updatedAt: submission.updatedAt,
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get vote counts' });
+    console.error('Get vote counts error:', error);
+    return res.status(500).json({ error: 'Failed to get vote counts' });
   }
 }
 
