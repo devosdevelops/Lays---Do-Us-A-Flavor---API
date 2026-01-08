@@ -1,14 +1,55 @@
-// TODO: Implement vote submission
+import { Vote } from '../models/Vote.js';
+import { Submission } from '../models/Submission.js';
+
+/**
+ * Submit a vote for a submission
+ * POST /api/votes
+ * Requires: Authorization header with Bearer token
+ */
 export async function submitVote(req, res) {
   try {
-    // TODO: Validate submissionId
-    // TODO: Get user ID from JWT token
-    // TODO: Check if user already voted for this submission
-    // TODO: Create vote record
-    // TODO: Increment submission voteCount
-    res.status(201).json({ message: 'Vote submission not yet implemented' });
+    const { submissionId } = req.body;
+    const userId = req.user.userId; // From auth middleware
+
+    // Validate submissionId
+    if (!submissionId || typeof submissionId !== 'string') {
+      return res.status(400).json({ error: 'Submission ID is required' });
+    }
+
+    // Check if submission exists
+    const submission = await Submission.findById(submissionId);
+    if (!submission) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    // Check if user already voted for this submission
+    const existingVote = await Vote.findOne({ userId, submissionId });
+    if (existingVote) {
+      return res.status(409).json({ error: 'You have already voted for this submission' });
+    }
+
+    // Create vote record
+    const newVote = await Vote.create({
+      userId,
+      submissionId,
+    });
+
+    // Increment submission's voteCount
+    await Submission.findByIdAndUpdate(
+      submissionId,
+      { $inc: { voteCount: 1 } },
+      { new: true }
+    );
+
+    return res.status(201).json({
+      _id: newVote._id,
+      userId: newVote.userId,
+      submissionId: newVote.submissionId,
+      createdAt: newVote.createdAt,
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to submit vote' });
+    console.error('Submit vote error:', error);
+    return res.status(500).json({ error: 'Failed to submit vote' });
   }
 }
 

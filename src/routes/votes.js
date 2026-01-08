@@ -5,14 +5,13 @@ import {
   getAllVotes,
   removeVote,
 } from '../controllers/voteController.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
 
-// TODO: Add authentication middleware for protected routes
-
 // POST /api/votes - Submit vote for a submission
-// TODO: Protect with authentication middleware
-router.post('/', submitVote);
+// Requires: Authorization header with Bearer token
+router.post('/', authenticateToken, submitVote);
 
 // GET /api/votes/:submissionId - Get vote count for a submission
 router.get('/:submissionId', getVoteCounts);
