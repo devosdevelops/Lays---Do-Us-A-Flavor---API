@@ -1,56 +1,111 @@
-// TODO: Implement admin view of all users
+import { User } from '../models/Placeholder.js';
+import { Submission } from '../models/Submission.js';
+
+/**
+ * Get all users (admin only)
+ * GET /api/admin/users
+ */
 export async function getAllUsers(req, res) {
   try {
-    // TODO: Verify user is admin
-    // TODO: Fetch all users with pagination
-    res.status(200).json({ message: 'Get all users not yet implemented' });
+    // Fetch all users, sorted by creation date (newest first)
+    const users = await User.find()
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json(users);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get users' });
+    console.error('Get all users error:', error);
+    return res.status(500).json({ error: 'Failed to get users' });
   }
 }
 
-// TODO: Implement user banning
+/**
+ * Ban a user (admin only)
+ * POST /api/admin/users/:userId/ban
+ */
 export async function banUser(req, res) {
   try {
-    // TODO: Verify user is admin
-    // TODO: Get user ID from params
-    // TODO: Set isBanned flag to true
-    res.status(200).json({ message: 'User ban not yet implemented' });
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Prevent banning self
+    if (user._id.toString() === req.user.userId) {
+      return res.status(400).json({ error: 'Cannot ban yourself' });
+    }
+
+    // Ban the user
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { isBanned: true },
+      { new: true }
+    ).select('-password');
+
+    return res.status(200).json({
+      message: 'User banned successfully',
+      user: updatedUser,
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to ban user' });
+    console.error('Ban user error:', error);
+    return res.status(500).json({ error: 'Failed to ban user' });
   }
 }
 
-// TODO: Implement admin view of all submissions
+/**
+ * Get all submissions (admin only)
+ * GET /api/admin/submissions
+ */
 export async function getAllSubmissions(req, res) {
   try {
-    // TODO: Verify user is admin
-    // TODO: Fetch all submissions with pagination
-    res.status(200).json({ message: 'Get all submissions not yet implemented' });
+    // Fetch all submissions, sorted by creation date (newest first)
+    const submissions = await Submission.find()
+      .populate('userId', 'username email isBanned')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.status(200).json(submissions);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get submissions' });
+    console.error('Get all submissions error:', error);
+    return res.status(500).json({ error: 'Failed to get submissions' });
   }
 }
 
-// TODO: Implement admin removal of submission
+/**
+ * Remove a submission (admin only)
+ * DELETE /api/admin/submissions/:submissionId
+ */
 export async function removeSubmission(req, res) {
   try {
-    // TODO: Verify user is admin
-    // TODO: Get submission ID from params
-    // TODO: Delete submission by ID
-    res.status(200).json({ message: 'Submission removal not yet implemented' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to remove submission' });
-  }
-}
+    const { submissionId } = req.params;
 
-// TODO: Implement admin view of all votes
-export async function getAllVotes(req, res) {
-  try {
-    // TODO: Verify user is admin
-    // TODO: Fetch all votes with pagination
-    res.status(200).json({ message: 'Get all votes not yet implemented' });
+    if (!submissionId) {
+      return res.status(400).json({ error: 'Submission ID is required' });
+    }
+
+    // Check if submission exists
+    const submission = await Submission.findById(submissionId);
+    if (!submission) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    // Delete the submission
+    await Submission.findByIdAndDelete(submissionId);
+
+    return res.status(200).json({
+      message: 'Submission removed successfully',
+      _id: submissionId,
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get votes' });
+    console.error('Remove submission error:', error);
+    return res.status(500).json({ error: 'Failed to remove submission' });
   }
 }
