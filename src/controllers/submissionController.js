@@ -12,8 +12,17 @@ import { logger } from '../utils/logger.js';
  */
 export async function createSubmission(req, res) {
   try {
-    const { flavorName, bagColor, fontChoice, keyFlavors, bagImageUrl } = req.body;
+    let { flavorName, bagColor, fontChoice, keyFlavors, bagImageUrl } = req.body;
     const userId = req.user.userId; // From auth middleware
+
+    // Parse keyFlavors if it's a JSON string (from FormData)
+    if (typeof keyFlavors === 'string') {
+      try {
+        keyFlavors = JSON.parse(keyFlavors);
+      } catch (e) {
+        keyFlavors = [];
+      }
+    }
 
     // Check if user is banned
     const user = await User.findById(userId);
