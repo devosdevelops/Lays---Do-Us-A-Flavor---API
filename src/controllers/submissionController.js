@@ -1,4 +1,5 @@
 import { Submission } from '../models/Submission.js';
+import { User } from '../models/Placeholder.js';
 import { validateSubmissionInput } from '../utils/validation.js';
 
 /**
@@ -10,6 +11,12 @@ export async function createSubmission(req, res) {
   try {
     const { flavorName, bagColor, fontChoice, keyFlavors } = req.body;
     const userId = req.user.userId; // From auth middleware
+
+    // Check if user is banned
+    const user = await User.findById(userId);
+    if (user && user.isBanned) {
+      return res.status(403).json({ error: 'User account has been banned' });
+    }
 
     // Validate input
     const validation = validateSubmissionInput(flavorName, bagColor, fontChoice, keyFlavors);

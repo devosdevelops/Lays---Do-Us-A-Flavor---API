@@ -1,5 +1,6 @@
 import { Vote } from '../models/Vote.js';
 import { Submission } from '../models/Submission.js';
+import { User } from '../models/Placeholder.js';
 
 /**
  * Submit a vote for a submission
@@ -10,6 +11,12 @@ export async function submitVote(req, res) {
   try {
     const { submissionId } = req.body;
     const userId = req.user.userId; // From auth middleware
+
+    // Check if user is banned
+    const user = await User.findById(userId);
+    if (user && user.isBanned) {
+      return res.status(403).json({ error: 'User account has been banned' });
+    }
 
     // Validate submissionId
     if (!submissionId || typeof submissionId !== 'string') {
