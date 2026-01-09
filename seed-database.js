@@ -20,13 +20,29 @@ const FLAVORS = [
   { name: 'Cosmic Space Dust', color: '#800080', font: 'Bold Sans', notes: ['Mysterious', 'Space', 'Unique'] },
   { name: 'Teriyaki Dragon', color: '#FF4500', font: 'Modern', notes: ['Teriyaki', 'Asian', 'Sweet'] },
   { name: 'Mint Mojito Madness', color: '#00CED1', font: 'Italic', notes: ['Mint', 'Refreshing', 'Cool'] },
+  { name: 'Sriracha Sunrise', color: '#FF0000', font: 'Bold Sans', notes: ['Sriracha', 'Hot', 'Asian'] },
+  { name: 'Maple Bacon Bliss', color: '#8B7355', font: 'Modern', notes: ['Maple', 'Bacon', 'Savory'] },
+  { name: 'Passion Fruit Paradise', color: '#FFB6C1', font: 'Italic', notes: ['Passion Fruit', 'Tropical', 'Sweet'] },
+  { name: 'Ghost Pepper Inferno', color: '#DC143C', font: 'Bold Sans', notes: ['Ghost Pepper', 'Extreme Heat', 'Bold'] },
+  { name: 'Pistachio Dream', color: '#6B8E23', font: 'Modern', notes: ['Pistachio', 'Nutty', 'Unique'] },
+  { name: 'Lavender Honey', color: '#E6E6FA', font: 'Italic', notes: ['Lavender', 'Honey', 'Sweet'] },
+  { name: 'Ginger Snap', color: '#CD853F', font: 'Bold Sans', notes: ['Ginger', 'Spicy', 'Crisp'] },
+  { name: 'Blueberry Lemon', color: '#4169E1', font: 'Modern', notes: ['Blueberry', 'Lemon', 'Citrus'] },
 ];
 
-const USERNAMES = [
-  'alex_flavor', 'design_master', 'chip_wizard', 'taste_explorer', 'snack_genius',
-  'creative_cook', 'flavor_queen', 'crispy_king', 'spice_seeker', 'sweet_tooth',
-  'bold_baker', 'zesty_zoe', 'savory_sam', 'pepper_paul', 'citrus_chris'
-];
+function generateUsernames(count) {
+  const adjectives = ['spicy', 'crispy', 'salty', 'sweet', 'bold', 'zesty', 'tangy', 'cool', 'hot', 'crunchy', 'savory', 'tasty'];
+  const nouns = ['chip', 'snack', 'flavor', 'craving', 'lover', 'addict', 'master', 'king', 'queen', 'genius', 'wizard', 'guru'];
+  
+  const usernames = new Set();
+  while (usernames.size < count) {
+    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    const num = Math.floor(Math.random() * 1000);
+    usernames.add(`${adj}_${noun}_${num}`);
+  }
+  return Array.from(usernames);
+}
 
 async function seedDatabase() {
   try {
@@ -40,9 +56,23 @@ async function seedDatabase() {
     await Vote.deleteMany({});
     console.log('✓ Cleared existing data');
 
-    // Create users
-    const users = [];
-    for (const username of USERNAMES) {
+    // Create admin user first
+    const adminPassword = await bcrypt.hash('Admin', 10);
+    const adminUser = await User.create({
+      username: 'admin',
+      email: 'admin@admin.com',
+      password: adminPassword,
+      isBanned: false,
+      isAdmin: true,
+    });
+    console.log('✓ Created admin user (admin@admin.com / Admin)');
+
+    // Create regular users
+    const userCount = 200;
+    const usernames = generateUsernames(userCount);
+    const users = [adminUser];
+    
+    for (const username of usernames) {
       const hashedPassword = await bcrypt.hash('password123', 10);
       const user = await User.create({
         username,
@@ -53,77 +83,84 @@ async function seedDatabase() {
       });
       users.push(user);
     }
-    console.log(`✓ Created ${users.length} users`);
+    console.log(`✓ Created ${userCount} regular users (${userCount + 1} total with admin)`);
 
-    // Create submissions
+    // Create submissions (~60, distributed across users)
     const submissions = [];
+    const submissionCount = 60;
     let flavorIndex = 0;
     
-    for (let i = 0; i < users.length; i++) {
+    for (let i = 0; i < submissionCount; i++) {
+      // Distribute submissions: some users have multiple, most have 0-1
+      const randomUserIdx = Math.floor(Math.random() * users.length);
       const flavor = FLAVORS[flavorIndex % FLAVORS.length];
-      const bagImages = [
-        `https://picsum.photos/400/400?random=${i * 4 + 1}`,
-        `https://picsum.photos/400/400?random=${i * 4 + 2}`,
-        `https://picsum.photos/400/400?random=${i * 4 + 3}`,
-        `https://picsum.photos/400/400?random=${i * 4 + 4}`,
-      ];
+      const imageIdx = i % 5; // Vary images
       
       const submission = await Submission.create({
-        userId: users[i]._id,
-        flavorName: flavor.name,
+        userId: users[randomUserIdx]._id,
+        flavorName: `${flavor.name} v${i + 1}`,
         bagColor: flavor.color,
         fontChoice: flavor.font,
         keyFlavors: flavor.notes,
-        bagImageUrl: bagImages[flavorIndex % bagImages.length],
+        bagImageUrl: `https://picsum.photos/400/400?random=${i * 10}`,
         voteCount: 0,
         hasWon: false,
       });
       submissions.push(submission);
       flavorIndex++;
     }
-    console.log(`✓ Created ${submissions.length} submissions`);
+    console.log(`✓ Created ${submissionCount} submissions`);
 
-    // Create votes - each user votes on random submissions
+    // Create votes (~1000+)
+    // Each user votes on 5-8 submissions on average
     let voteCount = 0;
-    for (let i = 0; i < users.length; i++) {
-      // Each user votes on 3-5 random submissions (excluding their own)
-      const votesPerUser = Math.floor(Math.random() * 3) + 3; // 3-5 votes
-      const votedSubmissions = new Set([i]); // Exclude their own submission
+    const targetVotes = 1000;
+    
+    for (let i = 0; i < users.length && voteCount < targetVotes; i++) {
+      // Vary votes per user (5-8)
+      const votesPerUser = Math.floor(Math.random() * 4) + 5;
+      const votedSubmissions = new Set();
       
-      for (let j = 0; j < votesPerUser; j++) {
-        let randomIdx;
+      for (let j = 0; j < votesPerUser && voteCount < targetVotes; j++) {
+        let randomSubmissionIdx;
         do {
-          randomIdx = Math.floor(Math.random() * submissions.length);
-        } while (votedSubmissions.has(randomIdx));
+          randomSubmissionIdx = Math.floor(Math.random() * submissions.length);
+        } while (votedSubmissions.has(randomSubmissionIdx));
         
-        votedSubmissions.add(randomIdx);
+        votedSubmissions.add(randomSubmissionIdx);
         
         // Create vote
-        await Vote.create({
-          userId: users[i]._id,
-          submissionId: submissions[randomIdx]._id,
-        });
-        
-        // Increment vote count on submission
-        submissions[randomIdx].voteCount += 1;
-        await submissions[randomIdx].save();
-        voteCount++;
+        try {
+          await Vote.create({
+            userId: users[i]._id,
+            submissionId: submissions[randomSubmissionIdx]._id,
+          });
+          
+          // Increment vote count on submission
+          submissions[randomSubmissionIdx].voteCount += 1;
+          await submissions[randomSubmissionIdx].save();
+          voteCount++;
+        } catch (e) {
+          // Duplicate vote, skip
+        }
       }
     }
     console.log(`✓ Created ${voteCount} votes`);
 
     // Fetch and display stats
-    const userCount = await User.countDocuments();
-    const submissionCount = await Submission.countDocuments();
-    const voteCount2 = await Vote.countDocuments();
+    const finalUserCount = await User.countDocuments();
+    const finalSubmissionCount = await Submission.countDocuments();
+    const finalVoteCount = await Vote.countDocuments();
 
     console.log('\n📊 Database Seeding Complete!');
-    console.log(`   Users: ${userCount}`);
-    console.log(`   Submissions: ${submissionCount}`);
-    console.log(`   Votes: ${voteCount2}`);
-    console.log('\n🧪 Test Credentials:');
-    console.log('   Username: alex_flavor');
-    console.log('   Email: alex_flavor@example.com');
+    console.log(`   Users: ${finalUserCount}`);
+    console.log(`   Submissions: ${finalSubmissionCount}`);
+    console.log(`   Votes: ${finalVoteCount}`);
+    console.log('\n🧪 Admin Account:');
+    console.log('   Email: admin@admin.com');
+    console.log('   Password: Admin');
+    console.log('\n🧪 Sample User Account:');
+    console.log('   Email: spicy_chip_123@example.com');
     console.log('   Password: password123');
 
     process.exit(0);
