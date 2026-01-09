@@ -66,6 +66,7 @@ Authorization: Bearer <token>
   "userId": "ObjectId (reference to User)",
   "flavorName": "string (2-100 characters)",
   "bagColor": "string (hex color code, e.g. #FF5733)",
+  "bagImageUrl": "string (optional, URL to bag design image)",
   "fontChoice": "string (design choice)",
   "keyFlavors": "array of strings (optional)",
   "voteCount": "number (auto-incremented)",
@@ -79,6 +80,7 @@ Authorization: Bearer <token>
 - Each user can submit multiple flavors
 - Vote count updates automatically when votes are cast
 - Hex color format is required for bagColor
+- `bagImageUrl` is optional and can be any valid image URL (for previewing bag designs)
 - `hasWon` flag indicates the winning submission (only one per contest)
 - Admin can select winner regardless of vote count
 
@@ -219,7 +221,8 @@ Content-Type: application/json
   "flavorName": "string (required, 2-100 characters)",
   "bagColor": "string (required, hex color code)",
   "fontChoice": "string (required)",
-  "keyFlavors": ["string", "string"] (optional array)
+  "keyFlavors": ["string", "string"] (optional array),
+  "bagImageUrl": "string (optional, image URL)"
 }
 ```
 
@@ -230,6 +233,7 @@ Content-Type: application/json
   "userId": "ObjectId",
   "flavorName": "string",
   "bagColor": "string",
+  "bagImageUrl": "string",
   "fontChoice": "string",
   "keyFlavors": ["string"],
   "voteCount": 0,

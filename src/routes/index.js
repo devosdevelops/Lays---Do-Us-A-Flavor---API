@@ -3,6 +3,7 @@ import userRoutes from './users.js';
 import submissionRoutes from './submissions.js';
 import voteRoutes from './votes.js';
 import adminRoutes from './admin.js';
+import uploadRoutes from './upload.js';
 
 const router = Router();
 
@@ -16,4 +17,5 @@ router.use('/users', userRoutes);
 router.use('/submissions', submissionRoutes);
 router.use('/votes', voteRoutes);
 router.use('/admin', adminRoutes);
+router.use('/', uploadRoutes);
 export default router;
