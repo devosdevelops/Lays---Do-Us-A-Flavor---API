@@ -9,7 +9,7 @@ import { validateSubmissionInput } from '../utils/validation.js';
  */
 export async function createSubmission(req, res) {
   try {
-    const { flavorName, bagColor, fontChoice, keyFlavors } = req.body;
+    const { flavorName, bagColor, fontChoice, keyFlavors, bagImageUrl } = req.body;
     const userId = req.user.userId; // From auth middleware
 
     // Check if user is banned
@@ -31,6 +31,7 @@ export async function createSubmission(req, res) {
       bagColor: bagColor.trim(),
       fontChoice: fontChoice ? fontChoice.trim() : undefined,
       keyFlavors: keyFlavors && Array.isArray(keyFlavors) ? keyFlavors.map(f => f.trim()) : [],
+      bagImageUrl: bagImageUrl || undefined,
     });
 
     // Return created submission
@@ -41,6 +42,7 @@ export async function createSubmission(req, res) {
       bagColor: newSubmission.bagColor,
       fontChoice: newSubmission.fontChoice,
       keyFlavors: newSubmission.keyFlavors,
+      bagImageUrl: newSubmission.bagImageUrl,
       voteCount: newSubmission.voteCount,
       createdAt: newSubmission.createdAt,
       updatedAt: newSubmission.updatedAt,
@@ -62,7 +64,7 @@ export async function getUserSubmissions(req, res) {
 
     // Fetch all submissions by this user, sorted by creation date (newest first)
     const userSubmissions = await Submission.find({ userId })
-      .select('_id userId flavorName bagColor fontChoice keyFlavors voteCount createdAt updatedAt')
+      .select('_id userId flavorName bagColor bagImageUrl fontChoice keyFlavors voteCount createdAt updatedAt')
       .sort({ createdAt: -1 })
       .lean();
 
@@ -82,7 +84,7 @@ export async function getAllSubmissions(req, res) {
   try {
     // Fetch all submissions sorted by creation date (newest first)
     const submissions = await Submission.find()
-      .select('_id userId flavorName bagColor fontChoice keyFlavors voteCount createdAt updatedAt')
+      .select('_id userId flavorName bagColor bagImageUrl fontChoice keyFlavors voteCount createdAt updatedAt')
       .sort({ createdAt: -1 })
       .lean();
 
