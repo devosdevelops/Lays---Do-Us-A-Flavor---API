@@ -62,10 +62,10 @@ async function seedDatabase() {
     for (let i = 0; i < users.length; i++) {
       const flavor = FLAVORS[flavorIndex % FLAVORS.length];
       const bagImages = [
-        'https://images.unsplash.com/photo-1569163139394-de4798aa62b3?w=400&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1599599810694-b5ac4dd64b3f?w=400&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1571115764595-644a244cb970?w=400&h=400&fit=crop',
-        'https://images.unsplash.com/photo-1585238341710-4b6a3b0b2c4e?w=400&h=400&fit=crop',
+        `https://picsum.photos/400/400?random=${i * 4 + 1}`,
+        `https://picsum.photos/400/400?random=${i * 4 + 2}`,
+        `https://picsum.photos/400/400?random=${i * 4 + 3}`,
+        `https://picsum.photos/400/400?random=${i * 4 + 4}`,
       ];
       
       const submission = await Submission.create({
