@@ -69,6 +69,7 @@ Authorization: Bearer <token>
   "fontChoice": "string (design choice)",
   "keyFlavors": "array of strings (optional)",
   "voteCount": "number (auto-incremented)",
+  "hasWon": "boolean (default: false)",
   "createdAt": "date",
   "updatedAt": "date"
 }
@@ -78,6 +79,8 @@ Authorization: Bearer <token>
 - Each user can submit multiple flavors
 - Vote count updates automatically when votes are cast
 - Hex color format is required for bagColor
+- `hasWon` flag indicates the winning submission (only one per contest)
+- Admin can select winner regardless of vote count
 
 ### Vote
 
@@ -546,6 +549,54 @@ Authorization: Bearer <admin_token>
 ```
 
 **Error Responses:**
+- `401` - Missing or invalid token
+- `403` - User is not an admin
+- `404` - Submission not found
+
+---
+
+#### `POST /api/admin/submissions/:submissionId/win`
+
+Select a submission as the winner. Only one submission can be marked as winner at a time. **Admin only.**
+
+**URL Parameters:**
+- `submissionId` - Submission's MongoDB ID
+
+**Headers:**
+```
+Authorization: Bearer <admin_token>
+```
+
+**Response (200):**
+```json
+{
+  "message": "Winner selected successfully",
+  "submission": {
+    "_id": "ObjectId",
+    "userId": {
+      "_id": "ObjectId",
+      "username": "string",
+      "email": "string"
+    },
+    "flavorName": "string",
+    "bagColor": "string",
+    "fontChoice": "string",
+    "keyFlavors": ["string"],
+    "voteCount": "number",
+    "hasWon": true,
+    "createdAt": "date",
+    "updatedAt": "date"
+  }
+}
+```
+
+**Behavior:**
+- Selecting a new winner automatically sets `hasWon: true` on the selected submission
+- If another submission was previously marked as winner, its `hasWon` flag is automatically set to `false`
+- Only one submission can have `hasWon: true` at any time
+
+**Error Responses:**
+- `400` - Submission ID is required
 - `401` - Missing or invalid token
 - `403` - User is not an admin
 - `404` - Submission not found
