@@ -4,6 +4,7 @@ import {
   banUser,
   getAllSubmissions,
   removeSubmission,
+  selectWinner,
 } from '../controllers/adminController.js';
 import { authenticateToken, authorizeAdmin } from '../middleware/auth.js';
 
@@ -22,5 +23,8 @@ router.get('/submissions', authenticateToken, authorizeAdmin, getAllSubmissions)
 
 // DELETE /api/admin/submissions/:submissionId - Remove submission
 router.delete('/submissions/:submissionId', authenticateToken, authorizeAdmin, removeSubmission);
+
+// POST /api/admin/submissions/:submissionId/win - Select winner
+router.post('/submissions/:submissionId/win', authenticateToken, authorizeAdmin, selectWinner);
 
 export default router;

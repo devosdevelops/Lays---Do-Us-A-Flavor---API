@@ -109,3 +109,46 @@ export async function removeSubmission(req, res) {
     return res.status(500).json({ error: 'Failed to remove submission' });
   }
 }
+
+/**
+ * Select a winning submission (admin only)
+ * POST /api/admin/submissions/:submissionId/win
+ */
+export async function selectWinner(req, res) {
+  try {
+    const { submissionId } = req.params;
+
+    if (!submissionId) {
+      return res.status(400).json({ error: 'Submission ID is required' });
+    }
+
+    // Check if submission exists
+    const submission = await Submission.findById(submissionId);
+    if (!submission) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    // If this submission is not already the winner, unset any previous winner
+    if (!submission.hasWon) {
+      await Submission.updateMany(
+        { hasWon: true },
+        { hasWon: false }
+      );
+    }
+
+    // Set this submission as the winner
+    const updatedSubmission = await Submission.findByIdAndUpdate(
+      submissionId,
+      { hasWon: true },
+      { new: true }
+    ).populate('userId', 'username email');
+
+    return res.status(200).json({
+      message: 'Winner selected successfully',
+      submission: updatedSubmission,
+    });
+  } catch (error) {
+    console.error('Select winner error:', error);
+    return res.status(500).json({ error: 'Failed to select winner' });
+  }
+}
