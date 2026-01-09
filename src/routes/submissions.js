@@ -8,12 +8,14 @@ import {
   exportScreenshot,
 } from '../controllers/submissionController.js';
 import { authenticateToken } from '../middleware/auth.js';
+import upload from '../middleware/upload.js';
 
 const router = Router();
 
 // POST /api/submissions - Create new submission
 // Requires: Authorization header with Bearer token
-router.post('/', authenticateToken, createSubmission);
+// Optional: image file in 'image' field
+router.post('/', authenticateToken, upload.single('image'), createSubmission);
 
 // GET /api/submissions/my - Get authenticated user's submissions
 // Requires: Authorization header with Bearer token

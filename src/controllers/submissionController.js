@@ -1,11 +1,14 @@
 import { Submission } from '../models/Submission.js';
 import { User } from '../models/Placeholder.js';
 import { validateSubmissionInput } from '../utils/validation.js';
+import cloudinary from '../config/cloudinary.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Create a new submission
  * POST /api/submissions
  * Requires: Authorization header with Bearer token
+ * Optional: image file in multipart/form-data with key 'image'
  */
 export async function createSubmission(req, res) {
   try {
@@ -24,6 +27,35 @@ export async function createSubmission(req, res) {
       return res.status(400).json({ errors: validation.errors });
     }
 
+    // Handle image upload if file provided
+    let finalBagImageUrl = bagImageUrl || undefined;
+    if (req.file) {
+      try {
+        // Upload to Cloudinary from buffer
+        const uploadResult = await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            {
+              folder: 'designs',
+              resource_type: 'auto',
+            },
+            (error, result) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve(result);
+              }
+            }
+          );
+          uploadStream.end(req.file.buffer);
+        });
+
+        finalBagImageUrl = uploadResult.secure_url;
+      } catch (uploadError) {
+        logger.error('Cloudinary upload failed during submission creation:', uploadError);
+        return res.status(500).json({ error: 'Failed to upload image to Cloudinary' });
+      }
+    }
+
     // Create submission
     const newSubmission = await Submission.create({
       userId,
@@ -31,7 +63,7 @@ export async function createSubmission(req, res) {
       bagColor: bagColor.trim(),
       fontChoice: fontChoice ? fontChoice.trim() : undefined,
       keyFlavors: keyFlavors && Array.isArray(keyFlavors) ? keyFlavors.map(f => f.trim()) : [],
-      bagImageUrl: bagImageUrl || undefined,
+      bagImageUrl: finalBagImageUrl,
     });
 
     // Return created submission
