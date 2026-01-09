@@ -15,13 +15,21 @@ const allowedOrigins = [
   'http://localhost:5174',
   'https://lays-do-us-a-flavor-admin.onrender.com',
   'https://lays-do-us-a-flavor-frontend.onrender.com',
+  'https://lays-do-us-a-flavor-configurator-kudu1dj1o.vercel.app',
+  'https://laysdo-us-a-flavoradmin.vercel.app',
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
+    // Allow localhost and specific whitelisted domains
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
-    } else {
+    }
+    // Allow any *.vercel.app domain
+    else if (origin && origin.includes('.vercel.app')) {
+      callback(null, true);
+    }
+    else {
       callback(new Error('CORS not allowed'));
     }
   },
