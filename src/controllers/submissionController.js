@@ -40,6 +40,7 @@ export async function createSubmission(req, res) {
     let finalBagImageUrl = bagImageUrl || undefined;
     if (req.file) {
       try {
+        logger.info(`Uploading image for submission: ${req.file.originalname} (${req.file.size} bytes)`);
         // Upload to Cloudinary from buffer
         const uploadResult = await new Promise((resolve, reject) => {
           const uploadStream = cloudinary.uploader.upload_stream(
@@ -49,8 +50,10 @@ export async function createSubmission(req, res) {
             },
             (error, result) => {
               if (error) {
+                logger.error('Cloudinary upload stream error:', error);
                 reject(error);
               } else {
+                logger.info(`Cloudinary upload successful: ${result.secure_url}`);
                 resolve(result);
               }
             }
@@ -61,7 +64,7 @@ export async function createSubmission(req, res) {
         finalBagImageUrl = uploadResult.secure_url;
       } catch (uploadError) {
         logger.error('Cloudinary upload failed during submission creation:', uploadError);
-        return res.status(500).json({ error: 'Failed to upload image to Cloudinary' });
+        return res.status(500).json({ error: 'Failed to upload image to Cloudinary', details: uploadError.message });
       }
     }
 
